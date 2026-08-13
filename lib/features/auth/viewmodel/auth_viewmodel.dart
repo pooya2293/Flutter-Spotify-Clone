@@ -1,3 +1,4 @@
+import 'package:client/core/failure/failure.dart';
 import 'package:client/features/auth/model/user_model.dart';
 import 'package:client/features/auth/repositories/auth_remote_repository.dart';
 import 'package:fpdart/fpdart.dart';
@@ -19,18 +20,32 @@ class AuthViewModel extends _$AuthViewModel {
     required String password,
   }) async {
     state = const AsyncValue.loading();
-    final res = await _authRemoteRepository.signup(
-      name: name,
-      email: email,
-      password: password,
-    );
-    final val = switch (res) {
-      Left(value: final l) => state = AsyncValue.error(
-        l.message,
-        StackTrace.current,
+    state = _toState(
+      await _authRemoteRepository.signup(
+        name: name,
+        email: email,
+        password: password,
       ),
-      Right(value: final r) => state = AsyncValue.data(r),
+    );
+  }
+
+  Future<void> loginUser({
+    required String email,
+    required String password,
+  }) async {
+    state = const AsyncValue.loading();
+    state = _toState(
+      await _authRemoteRepository.login(email: email, password: password),
+    );
+  }
+
+  AsyncValue<UserModel> _toState(Either<AppFailure, UserModel> res) {
+    return switch (res) {
+      Left(value: final failure) => AsyncValue.error(
+        failure,
+        failure.stackTrace ?? StackTrace.current,
+      ),
+      Right(value: final user) => AsyncValue.data(user),
     };
-    print('val: $val');
   }
 }

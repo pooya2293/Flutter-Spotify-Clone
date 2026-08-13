@@ -1,3 +1,4 @@
+import 'package:client/core/failure/failure.dart';
 import 'package:client/core/theme/app_palette.dart';
 import 'package:client/core/widgets/loader.dart';
 import 'package:client/features/auth/view/pages/login_page.dart';
@@ -34,21 +35,14 @@ class _SignupPageState extends ConsumerState<SignupPage> {
     ref.listen(authViewModelProvider, (_, next) {
       next?.when(
         data: (data) {
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(
-              const SnackBar(content: Text('User created successfully')),
-            );
+          if (!mounted) return;
+          _showMessage('User created successfully');
           Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const LogInPage()),
           );
         },
-        error: (error, st) {
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(SnackBar(content: Text(error.toString())));
-        },
+        error: (error, st) => _showMessage(describeError(error)),
         loading: () {},
       );
     });
@@ -84,7 +78,7 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                     AuthGradientButton(
                       buttonText: 'Sign up',
                       onTap: () async {
-                        if (formKey.currentState!.validate()) {
+                        if (formKey.currentState?.validate() ?? false) {
                           await ref
                               .read(authViewModelProvider.notifier)
                               .signUpUser(
@@ -126,5 +120,12 @@ class _SignupPageState extends ConsumerState<SignupPage> {
               ),
             ),
     );
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 }

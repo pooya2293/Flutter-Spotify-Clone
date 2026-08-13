@@ -1,4 +1,5 @@
 import 'package:client/core/theme/app_palette.dart';
+import 'package:client/core/utils/validators.dart';
 import 'package:client/features/auth/repositories/auth_remote_repository.dart';
 import 'package:client/features/auth/view/pages/signup_page.dart';
 import 'package:client/features/auth/view/widgets/auth_gradient_button.dart';
@@ -41,26 +42,40 @@ class _LogInPageState extends State<LogInPage> {
                 style: TextStyle(fontSize: 50, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 30),
-              CustomField(hintText: 'Email', controller: emailController),
+              CustomField(
+                hintText: 'Email',
+                controller: emailController,
+                keyboardType: TextInputType.emailAddress,
+                validator: Validators.email,
+              ),
               const SizedBox(height: 30),
               CustomField(
                 hintText: 'Password',
                 controller: passwordController,
                 isObscureText: true,
+                validator: Validators.password,
               ),
               const SizedBox(height: 20),
               AuthGradientButton(
                 buttonText: 'Sign in',
                 onTap: () async {
+                  if (!formKey.currentState!.validate()) {
+                    return;
+                  }
                   final res = await AuthRemoteRepository().login(
-                    email: emailController.text,
+                    email: emailController.text.trim(),
                     password: passwordController.text,
                   );
-                  final val = switch (res) {
-                    Left(value: final l) => l,
-                    Right(value: final r) => r.email,
+                  if (!context.mounted) {
+                    return;
+                  }
+                  final message = switch (res) {
+                    Left(value: final l) => l.message,
+                    Right() => 'Logged in successfully',
                   };
-                  print('Login result: $val');
+                  ScaffoldMessenger.of(context)
+                    ..hideCurrentSnackBar()
+                    ..showSnackBar(SnackBar(content: Text(message)));
                 },
               ),
               const SizedBox(height: 20),

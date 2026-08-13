@@ -1,52 +1,36 @@
-import 'dart:convert';
-
-import 'package:client/core/constants/server_constant.dart';
 import 'package:client/core/failure/failure.dart';
+import 'package:client/core/network/api_client.dart';
 import 'package:client/features/auth/model/user_model.dart';
 import 'package:fpdart/fpdart.dart';
-import 'package:http/http.dart' as http;
 
 class AuthRemoteRepository {
+  final ApiClient _apiClient;
+
+  AuthRemoteRepository([this._apiClient = const ApiClient()]);
+
   Future<Either<AppFailure, UserModel>> signup({
     required String name,
     required String email,
     required String password,
   }) async {
-    try {
-      final response = await http.post(
-        Uri.parse('${ServerConstant.serverUrl}/auth/signup'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'name': name, 'email': email, 'password': password}),
-      );
-
-      final resBodyMap = jsonDecode(response.body) as Map<String, dynamic>;
-      if (response.statusCode != 201) {
-        return Left(AppFailure('Failed to sign up: ${resBodyMap['detail']}'));
-      }
-
-      return Right(UserModel.fromMap(resBodyMap));
-    } catch (e) {
-      return Left(AppFailure(e.toString()));
-    }
+    final res = await _apiClient.post(
+      path: '/auth/signup',
+      body: {'name': name, 'email': email, 'password': password},
+      failureMessage: 'Failed to sign up',
+      successStatusCode: 201,
+    );
+    return res.map(UserModel.fromMap);
   }
 
   Future<Either<AppFailure, UserModel>> login({
     required String email,
     required String password,
   }) async {
-    try {
-      final response = await http.post(
-        Uri.parse('${ServerConstant.serverUrl}/auth/login'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email, 'password': password}),
-      );
-      final resBodyMap = jsonDecode(response.body) as Map<String, dynamic>;
-      if (response.statusCode != 200) {
-        return Left(AppFailure('Failed to login: ${resBodyMap['detail']}'));
-      }
-      return Right(UserModel.fromMap(resBodyMap));
-    } catch (e) {
-      return Left(AppFailure(e.toString()));
-    }
+    final res = await _apiClient.post(
+      path: '/auth/login',
+      body: {'email': email, 'password': password},
+      failureMessage: 'Failed to login',
+    );
+    return res.map(UserModel.fromMap);
   }
 }

@@ -29,6 +29,8 @@ class _SignupPageState extends ConsumerState<SignupPage> {
 
   @override
   Widget build(BuildContext context) {
+    final val = ref.watch(authViewModelProvider);
+    print('val2: $val');
     return Scaffold(
       appBar: AppBar(),
       body: Padding(

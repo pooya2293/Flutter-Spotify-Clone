@@ -24,13 +24,9 @@ class AuthViewModel extends _$AuthViewModel {
       email: email,
       password: password,
     );
-    final val = switch (res) {
-      Left(value: final l) => state = AsyncValue.error(
-        l.message,
-        StackTrace.current,
-      ),
-      Right(value: final r) => state = AsyncValue.data(r),
+    state = switch (res) {
+      Left(value: final l) => AsyncValue.error(l.message, StackTrace.current),
+      Right(value: final r) => AsyncValue.data(r),
     };
-    print('val: $val');
   }
 }

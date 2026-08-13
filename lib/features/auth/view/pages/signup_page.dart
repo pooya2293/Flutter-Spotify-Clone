@@ -1,4 +1,5 @@
 import 'package:client/core/theme/app_palette.dart';
+import 'package:client/core/utils/validators.dart';
 import 'package:client/core/widgets/loader.dart';
 import 'package:client/features/auth/view/pages/login_page.dart';
 import 'package:client/features/auth/view/widgets/auth_gradient_button.dart';
@@ -73,12 +74,18 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                     const SizedBox(height: 30),
                     CustomField(hintText: 'Name', controller: nameController),
                     const SizedBox(height: 30),
-                    CustomField(hintText: 'Email', controller: emailController),
+                    CustomField(
+                      hintText: 'Email',
+                      controller: emailController,
+                      keyboardType: TextInputType.emailAddress,
+                      validator: Validators.email,
+                    ),
                     const SizedBox(height: 30),
                     CustomField(
                       hintText: 'Password',
                       controller: passwordController,
                       isObscureText: true,
+                      validator: Validators.password,
                     ),
                     const SizedBox(height: 20),
                     AuthGradientButton(
@@ -88,8 +95,8 @@ class _SignupPageState extends ConsumerState<SignupPage> {
                           await ref
                               .read(authViewModelProvider.notifier)
                               .signUpUser(
-                                name: nameController.text,
-                                email: emailController.text,
+                                name: nameController.text.trim(),
+                                email: emailController.text.trim(),
                                 password: passwordController.text,
                               );
                         }

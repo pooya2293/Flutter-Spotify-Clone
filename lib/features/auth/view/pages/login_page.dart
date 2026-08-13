@@ -1,19 +1,21 @@
+import 'package:client/core/failure/failure.dart';
 import 'package:client/core/theme/app_palette.dart';
-import 'package:client/features/auth/repositories/auth_remote_repository.dart';
+import 'package:client/core/widgets/loader.dart';
 import 'package:client/features/auth/view/pages/signup_page.dart';
 import 'package:client/features/auth/view/widgets/auth_gradient_button.dart';
 import 'package:client/features/auth/view/widgets/custom_field.dart';
+import 'package:client/features/auth/viewmodel/auth_viewmodel.dart';
 import 'package:flutter/material.dart';
-import 'package:fpdart/fpdart.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class LogInPage extends StatefulWidget {
+class LogInPage extends ConsumerStatefulWidget {
   const LogInPage({super.key});
 
   @override
-  State<LogInPage> createState() => _LogInPageState();
+  ConsumerState<LogInPage> createState() => _LogInPageState();
 }
 
-class _LogInPageState extends State<LogInPage> {
+class _LogInPageState extends ConsumerState<LogInPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
   final formKey = GlobalKey<FormState>();
@@ -27,70 +29,91 @@ class _LogInPageState extends State<LogInPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isLoading = ref.watch(authViewModelProvider)?.isLoading == true;
+    ref.listen(authViewModelProvider, (_, next) {
+      next?.when(
+        data: (user) => _showMessage('Welcome back, ${user.name}'),
+        error: (error, st) => _showMessage(describeError(error)),
+        loading: () {},
+      );
+    });
     return Scaffold(
       appBar: AppBar(),
-      body: Padding(
-        padding: const EdgeInsets.all(15.0),
-        child: Form(
-          key: formKey,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Text(
-                'Sign In.',
-                style: TextStyle(fontSize: 50, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 30),
-              CustomField(hintText: 'Email', controller: emailController),
-              const SizedBox(height: 30),
-              CustomField(
-                hintText: 'Password',
-                controller: passwordController,
-                isObscureText: true,
-              ),
-              const SizedBox(height: 20),
-              AuthGradientButton(
-                buttonText: 'Sign in',
-                onTap: () async {
-                  final res = await AuthRemoteRepository().login(
-                    email: emailController.text,
-                    password: passwordController.text,
-                  );
-                  final val = switch (res) {
-                    Left(value: final l) => l,
-                    Right(value: final r) => r.email,
-                  };
-                  print('Login result: $val');
-                },
-              ),
-              const SizedBox(height: 20),
-              GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const SignupPage()),
-                  );
-                },
-                child: RichText(
-                  text: TextSpan(
-                    text: 'Don\'t have an account? ',
-                    style: Theme.of(context).textTheme.titleMedium,
-                    children: const [
-                      TextSpan(
-                        text: ' Sign Up',
-                        style: TextStyle(
-                          color: Palette.gradient2,
-                          fontWeight: FontWeight.bold,
+      body: isLoading
+          ? const Loader()
+          : Padding(
+              padding: const EdgeInsets.all(15.0),
+              child: Form(
+                key: formKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Text(
+                      'Sign In.',
+                      style: TextStyle(
+                        fontSize: 50,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 30),
+                    CustomField(hintText: 'Email', controller: emailController),
+                    const SizedBox(height: 30),
+                    CustomField(
+                      hintText: 'Password',
+                      controller: passwordController,
+                      isObscureText: true,
+                    ),
+                    const SizedBox(height: 20),
+                    AuthGradientButton(
+                      buttonText: 'Sign in',
+                      onTap: () async {
+                        if (formKey.currentState?.validate() ?? false) {
+                          await ref
+                              .read(authViewModelProvider.notifier)
+                              .loginUser(
+                                email: emailController.text,
+                                password: passwordController.text,
+                              );
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 20),
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SignupPage(),
+                          ),
+                        );
+                      },
+                      child: RichText(
+                        text: TextSpan(
+                          text: 'Don\'t have an account? ',
+                          style: Theme.of(context).textTheme.titleMedium,
+                          children: const [
+                            TextSpan(
+                              text: ' Sign Up',
+                              style: TextStyle(
+                                color: Palette.gradient2,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
+            ),
     );
+  }
+
+  void _showMessage(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(content: Text(message)));
   }
 }

@@ -5,15 +5,26 @@ import 'package:client/core/failure/failure.dart';
 import 'package:client/features/auth/model/user_model.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:http/http.dart' as http;
+import 'package:riverpod_annotation/riverpod_annotation.dart';
+
+part 'auth_remote_repository.g.dart';
+
+@riverpod
+AuthRemoteRepository authRemoteRepository(Ref ref) => AuthRemoteRepository();
 
 class AuthRemoteRepository {
+  AuthRemoteRepository({http.Client? client})
+    : _client = client ?? http.Client();
+
+  final http.Client _client;
+
   Future<Either<AppFailure, UserModel>> signup({
     required String name,
     required String email,
     required String password,
   }) async {
     try {
-      final response = await http.post(
+      final response = await _client.post(
         Uri.parse('${ServerConstant.serverUrl}/auth/signup'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'name': name, 'email': email, 'password': password}),
@@ -35,7 +46,7 @@ class AuthRemoteRepository {
     required String password,
   }) async {
     try {
-      final response = await http.post(
+      final response = await _client.post(
         Uri.parse('${ServerConstant.serverUrl}/auth/login'),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode({'email': email, 'password': password}),

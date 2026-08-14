@@ -83,7 +83,7 @@ class _LogInPageState extends ConsumerState<LogInPage> {
                         );
                         final val = switch (res) {
                           Left(value: final l) => l,
-                          Right(value: final r) => r.email,
+                          Right(value: final r) => r,
                         };
                         print('Login result: $val');
                       },

@@ -1,7 +1,7 @@
 import 'package:client/core/theme/app_palette.dart';
 import 'package:client/core/utils.dart';
 import 'package:client/core/widgets/loader.dart';
-import 'package:client/features/auth/repositories/auth_remote_repository.dart';
+
 import 'package:client/features/auth/view/pages/signup_page.dart';
 import 'package:client/features/auth/view/widgets/auth_gradient_button.dart';
 import 'package:client/features/auth/view/widgets/custom_field.dart';
@@ -31,7 +31,9 @@ class _LogInPageState extends ConsumerState<LogInPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isLoading = ref.watch(authViewModelProvider)?.isLoading == true;
+    final isLoading = ref.watch(
+      authViewModelProvider.select((val) => val?.isLoading == true),
+    );
     ref.listen(authViewModelProvider, (_, next) {
       next?.when(
         data: (data) {
@@ -77,15 +79,16 @@ class _LogInPageState extends ConsumerState<LogInPage> {
                     AuthGradientButton(
                       buttonText: 'Sign in',
                       onTap: () async {
-                        final res = await AuthRemoteRepository().login(
-                          email: emailController.text,
-                          password: passwordController.text,
-                        );
-                        final val = switch (res) {
-                          Left(value: final l) => l,
-                          Right(value: final r) => r,
-                        };
-                        print('Login result: $val');
+                        if (formKey.currentState!.validate()) {
+                          await ref
+                              .read(authViewModelProvider.notifier)
+                              .logInUser(
+                                email: emailController.text,
+                                password: passwordController.text,
+                              );
+                        } else {
+                          showSnackBar(context, "missing fields!");
+                        }
                       },
                     ),
                     const SizedBox(height: 20),

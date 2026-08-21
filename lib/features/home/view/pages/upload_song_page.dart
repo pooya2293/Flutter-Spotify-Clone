@@ -53,7 +53,14 @@ class _UploadSongPageState extends ConsumerState<UploadSongPage> {
               GestureDetector(
                 onTap: selectImage,
                 child: selectedImage != null
-                    ? Image.file(selectedImage!)
+                    ? SizedBox(
+                        height: 150,
+                        width: double.infinity,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: Image.file(selectedImage!, fit: BoxFit.cover),
+                        ),
+                      )
                     : DottedBorder(
                         options: RoundedRectDottedBorderOptions(
                           radius: const Radius.circular(15),

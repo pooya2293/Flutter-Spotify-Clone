@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:client/core/theme/app_palette.dart';
 import 'package:client/core/utils.dart';
 import 'package:client/core/widgets/custom_field.dart';
+import 'package:client/features/home/repositories/home_repository.dart';
 import 'package:client/features/home/view/widgets/audio_wave.dart';
 import 'package:dotted_border/dotted_border.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
@@ -52,7 +53,14 @@ class _UploadSongPageState extends ConsumerState<UploadSongPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Upload Song'),
-        actions: [IconButton(onPressed: () {}, icon: Icon(Icons.check))],
+        actions: [
+          IconButton(
+            onPressed: () async {
+              await HomeRepository().uploadSong(selectedImage!, selectedAudio!);
+            },
+            icon: Icon(Icons.check),
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Padding(

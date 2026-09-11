@@ -3,6 +3,18 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
+//GPT
+String rgbToHex(Color color) {
+  return '${(color.r * 255).round().toRadixString(16).padLeft(2, '0')}'
+      '${(color.g * 255).round().toRadixString(16).padLeft(2, '0')}'
+      '${(color.b * 255).round().toRadixString(16).padLeft(2, '0')}';
+}
+//GPT
+
+Color hexToColor(String hex) {
+  return Color(int.parse(hex, radix: 16) + 0xFF000000);
+}
+
 void showSnackBar(BuildContext context, String content) {
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()

@@ -2,12 +2,13 @@ import 'package:client/core/providers/current_user_notifier.dart';
 import 'package:client/features/auth/model/user_model.dart';
 import 'package:client/features/auth/repositories/auth_local_repository.dart';
 import 'package:client/features/auth/repositories/auth_remote_repository.dart';
+import 'package:flutter/foundation.dart';
 import 'package:fpdart/fpdart.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 part 'auth_viewmodel.g.dart';
 
-@riverpod
+@Riverpod(keepAlive: true)
 class AuthViewModel extends _$AuthViewModel {
   late AuthRemoteRepository _authRemoteRepository;
   late AuthLocalRepository _authLocalRepository;
@@ -75,9 +76,13 @@ class AuthViewModel extends _$AuthViewModel {
   Future<UserModel?> getData() async {
     state = const AsyncValue.loading();
     final token = _authLocalRepository.getToken();
+    debugPrint('SAVED TOKEN EXISTS: ${token != null && token.isNotEmpty}');
+
     if (token != null) {
       //TODO: send a request to server to get the user data by token
       final res = await _authRemoteRepository.getCurrentUserData(token);
+      debugPrint('GET USER RESULT: $res');
+      debugPrint('PROVIDER BEFORE SUCCESS: ${_currentUserNotifier}');
       //GPT add Start
       if (!ref.mounted) {
         return null;

@@ -11,6 +11,9 @@ void main() async {
   final container = ProviderContainer();
   await container.read(authViewModelProvider.notifier).initSharedPreferences();
   await container.read(authViewModelProvider.notifier).getData();
+  debugPrint(
+    'CURRENT USER AFTER getData: ${container.read(currentUserProvider)}',
+  );
   runApp(UncontrolledProviderScope(container: container, child: const MyApp()));
 }
 

@@ -62,41 +62,49 @@ class AuthViewModel extends _$AuthViewModel {
         l.message,
         StackTrace.current,
       ),
-      Right(value: final r) => _loginSuccsess(r),
+      Right(value: final r) => await _loginSuccsess(r),
     };
     print('val: $val');
   }
 
-  AsyncValue<UserModel>? _loginSuccsess(UserModel user) {
-    _authLocalRepository.setToken(user.token);
+  Future<AsyncValue<UserModel>> _loginSuccsess(UserModel user) async {
+    await _authLocalRepository.setToken(user.token);
     _currentUserNotifier.addUser(user);
-    return state = AsyncValue.data(user);
+    state = AsyncValue.data(user);
+    return state!;
   }
 
   Future<UserModel?> getData() async {
-    state = const AsyncValue.loading();
     final token = _authLocalRepository.getToken();
+
     debugPrint('SAVED TOKEN EXISTS: ${token != null && token.isNotEmpty}');
 
-    if (token != null) {
-      //TODO: send a request to server to get the user data by token
-      final res = await _authRemoteRepository.getCurrentUserData(token);
-      debugPrint('GET USER RESULT: $res');
-      debugPrint('PROVIDER BEFORE SUCCESS: ${_currentUserNotifier}');
-      //GPT add Start
-      if (!ref.mounted) {
-        return null;
-      }
-      //GPT done
-      final val = switch (res) {
-        Left(value: final l) => state = AsyncValue.error(
-          l.message,
-          StackTrace.current,
-        ),
-        Right(value: final r) => _getDataSuccess(r),
-      };
-      return val.value;
+    // No saved token: user is logged out.
+    if (token == null || token.isEmpty) {
+      state = null;
+      _currentUserNotifier.state = null;
+      debugPrint('NO TOKEN: USER IS LOGGED OUT');
+      return null;
     }
+
+    state = const AsyncValue.loading();
+
+    final res = await _authRemoteRepository.getCurrentUserData(token);
+
+    debugPrint('GET USER RESULT: $res');
+
+    if (!ref.mounted) {
+      return null;
+    }
+
+    return switch (res) {
+      Left(value: final l) => _handleGetDataError(l.message),
+      Right(value: final r) => _getDataSuccess(r).value,
+    };
+  }
+
+  UserModel? _handleGetDataError(String message) {
+    state = AsyncValue.error(message, StackTrace.current);
     return null;
   }
 

@@ -1,5 +1,6 @@
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart';
 
 part 'auth_local_repository.g.dart';
 
@@ -15,9 +16,14 @@ class AuthLocalRepository {
     _sharedPreferences = await SharedPreferences.getInstance();
   }
 
-  void setToken(String? token) {
-    if (token != null) {
-      _sharedPreferences.setString('x-auth-token', token);
+  Future<void> setToken(String? token) async {
+    if (token != null && token.isNotEmpty) {
+      final saved = await _sharedPreferences.setString('x-auth-token', token);
+
+      debugPrint('TOKEN SAVE RESULT: $saved');
+      debugPrint('TOKEN EXISTS AFTER SAVE: ${getToken()?.isNotEmpty == true}');
+    } else {
+      debugPrint('TOKEN SAVE SKIPPED: token is null or empty');
     }
   }
 
